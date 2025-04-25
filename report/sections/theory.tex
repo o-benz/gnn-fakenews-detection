@@ -1,0 +1,23 @@
+\section{Theoretical Background}
+% Brief explanation of GNNs
+% Why GNNs are well-suited for fake news (relational structure)
+% Optional: mathematical formulation
+
+Graph Neural Networks (GNNs) are a class of deep learning models designed to operate on graph-structured data. Unlike traditional neural networks, which assume inputs in the form of vectors, images, or sequences, GNNs are explicitly constructed to model relational information by learning over nodes and their edges in a graph~\cite{SanchezLengeling2021}. This structural generality makes them well-suited for tasks where the entities of interest are interconnected—such as social networks, citation graphs, or, in our case, news propagation networks.
+
+The fundamental operation of a GNN lies in \textit{message passing}. Each node in the graph aggregates information from its neighbors in order to update its own representation. This process is typically repeated over multiple layers, allowing information to propagate from a node's local neighborhood to farther nodes in the graph. More formally, let $G = (V, E)$ denote a graph with node set $V$ and edge set $E$, and let $h_v^{(k)}$ represent the feature vector of node $v$ at layer $k$. The message passing framework can be described by the following two-step update rule:
+
+\begin{align}
+    m_v^{(k)} &= \text{AGGREGATE}^{(k)}\left(\{h_u^{(k-1)} : u \in \mathcal{N}(v)\}\right) \\
+    h_v^{(k)} &= \text{UPDATE}^{(k)}\left(h_v^{(k-1)}, m_v^{(k)}\right)
+\end{align}
+
+Here, $\mathcal{N}(v)$ denotes the set of neighbors of node $v$, and the \texttt{AGGREGATE} and \texttt{UPDATE} functions are learned or predefined operations (e.g., mean, sum, or attention-based mechanisms). The final node representations can be used for downstream tasks such as node classification, graph classification, or edge prediction.
+
+In the context of fake news detection, GNNs allow us to model not only the content of a news article (as a node feature) but also the relational structure of how it spreads. Each article can be represented as a node in the graph, connected to users who interact with it, other articles it shares audiences with, or even entities mentioned in the text. This relational modeling is critical because fake news often exhibits unique spreading patterns in social media, such as rapid diffusion within echo chambers or disproportionate engagement from certain user communities.
+
+Moreover, GNNs are capable of encoding higher-order patterns in the graph. After several layers of message passing, a node's representation contains information not just from its immediate neighbors but also from their neighbors, recursively. This property is valuable for identifying latent structures in misinformation diffusion—such as identifying communities that consistently engage with low-credibility sources.
+
+Several GNN variants have been proposed to improve upon this basic framework. For instance, Graph Attention Networks (GATs) assign different weights to neighbors based on their relevance, while Heterogeneous GNNs can handle graphs with multiple types of nodes and edges. These adaptations are particularly relevant to fake news detection tasks, where not all users or interactions are equally informative, and the underlying graph is naturally heterogeneous.
+
+To summarize, GNNs provide a mathematically grounded and highly expressive framework for capturing both the content and context of news articles. Their inductive bias toward relational reasoning and multi-hop neighborhood aggregation makes them an ideal choice for addressing the structural complexities of fake news detection.
