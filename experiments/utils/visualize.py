@@ -1,0 +1,122 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import os
+import json
+from sklearn.metrics import confusion_matrix, classification_report
+import pandas as pd
+
+def plot_model_comparison(results):
+    """Create a bar plot comparing model performances."""
+    df = pd.DataFrame({
+        'Model': list(results.keys()),
+        'Accuracy': [data['test_accuracy'] for data in results.values()],
+        'Loss': [data['test_loss'] for data in results.values()]
+    })
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # Plot accuracy
+    sns.barplot(x='Model', y='Accuracy', data=df, ax=ax1)
+    ax1.set_title('Test Accuracy Comparison')
+    ax1.set_ylim(0, 1)
+    
+    # Plot loss
+    sns.barplot(x='Model', y='Loss', data=df, ax=ax2)
+    ax2.set_title('Test Loss Comparison')
+    
+    plt.tight_layout()
+    os.makedirs('results/comparison', exist_ok=True)
+    plt.savefig('results/comparison/model_comparison.png')
+    plt.close()
+
+def plot_training_curves_comparison(results):
+    """Plot training and validation curves for all models."""
+    plt.figure(figsize=(15, 5))
+    
+    # Plot training loss
+    plt.subplot(1, 2, 1)
+    for model_name, data in results.items():
+        plt.plot(data['train_losses'], label=f'{model_name.upper()} (Train)')
+        plt.plot(data['val_losses'], label=f'{model_name.upper()} (Val)')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    
+    # Plot training accuracy
+    plt.subplot(1, 2, 2)
+    for model_name, data in results.items():
+        plt.plot(data['train_accuracies'], label=f'{model_name.upper()} (Train)')
+        plt.plot(data['val_accuracies'], label=f'{model_name.upper()} (Val)')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.tight_layout()
+    os.makedirs('results/comparison', exist_ok=True)
+    plt.savefig('results/comparison/training_curves.png')
+    plt.close()
+
+def plot_confusion_matrices_comparison(results):
+    """Plot confusion matrices for all models."""
+    n_models = len(results)
+    fig, axes = plt.subplots(1, n_models, figsize=(5*n_models, 4))
+    if n_models == 1:
+        axes = [axes]
+    
+    for ax, (model_name, data) in zip(axes, results.items()):
+        cm = data['confusion_matrix']
+        cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        
+        sns.heatmap(cm_normalized, annot=True, fmt='.2%', cmap='Blues', ax=ax)
+        ax.set_title(f'{model_name.upper()} Confusion Matrix')
+        ax.set_xlabel('Predicted')
+        ax.set_ylabel('True')
+    
+    plt.tight_layout()
+    os.makedirs('results/comparison', exist_ok=True)
+    plt.savefig('results/comparison/confusion_matrices.png')
+    plt.close()
+
+def create_performance_table(results):
+    """Create a performance comparison table."""
+    metrics = {
+        'Model': [],
+        'Test Accuracy': [],
+        'Test Loss': [],
+        'Training Time (s)': [],
+        'Parameters Count': []
+    }
+    
+    for model_name, data in results.items():
+        metrics['Model'].append(model_name.upper())
+        metrics['Test Accuracy'].append(data['test_accuracy'])
+        metrics['Test Loss'].append(data['test_loss'])
+        metrics['Training Time (s)'].append(data['training_time'])
+        metrics['Parameters Count'].append(data['parameters_count'])
+    
+    df = pd.DataFrame(metrics)
+    
+    # Save as CSV
+    os.makedirs('results/comparison', exist_ok=True)
+    df.to_csv('results/comparison/performance_metrics.csv', index=False)
+    
+    # Save as LaTeX table
+    latex_table = df.to_latex(index=False, float_format=lambda x: '{:.4f}'.format(x))
+    with open('results/comparison/performance_metrics.tex', 'w') as f:
+        f.write(latex_table)
+    
+    return df
+
+def visualize_results(results):
+    """Generate all visualizations for the results."""
+    os.makedirs('results/comparison', exist_ok=True)
+    
+    plot_training_curves_comparison(results)
+    plot_confusion_matrices_comparison(results)
+    plot_model_comparison(results)
+    create_performance_table(results) 
