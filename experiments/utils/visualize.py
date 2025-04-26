@@ -34,31 +34,40 @@ def plot_training_curves_comparison(results):
     """Plot training and validation curves for all models."""
     plt.figure(figsize=(15, 5))
     
+    # Define colors for each model
+    colors = {
+        'gcn': '#2ecc71',    # Green
+        'gat': '#e74c3c',    # Red
+        'dhgat': '#3498db'   # Blue
+    }
+    
     # Plot training loss
     plt.subplot(1, 2, 1)
     for model_name, data in results.items():
-        plt.plot(data['train_losses'], label=f'{model_name.upper()} (Train)')
-        plt.plot(data['val_losses'], label=f'{model_name.upper()} (Val)')
+        color = colors.get(model_name.lower(), '#000000')
+        plt.plot(data['train_losses'], color=color, label=f'{model_name.upper()} (Train)')
+        plt.plot(data['val_losses'], color=color, linestyle='--', label=f'{model_name.upper()} (Val)')
     plt.title('Training and Validation Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
-    plt.grid(True)
+    plt.grid(True, alpha=0.3)
     
     # Plot training accuracy
     plt.subplot(1, 2, 2)
     for model_name, data in results.items():
-        plt.plot(data['train_accuracies'], label=f'{model_name.upper()} (Train)')
-        plt.plot(data['val_accuracies'], label=f'{model_name.upper()} (Val)')
+        color = colors.get(model_name.lower(), '#000000')
+        plt.plot(data['train_accuracies'], color=color, label=f'{model_name.upper()} (Train)')
+        plt.plot(data['val_accuracies'], color=color, linestyle='--', label=f'{model_name.upper()} (Val)')
     plt.title('Training and Validation Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.grid(True)
+    plt.grid(True, alpha=0.3)
     
     plt.tight_layout()
     os.makedirs('results/comparison', exist_ok=True)
-    plt.savefig('results/comparison/training_curves.png')
+    plt.savefig('results/comparison/training_curves.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def plot_confusion_matrices_comparison(results):
