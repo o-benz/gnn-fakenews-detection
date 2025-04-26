@@ -188,11 +188,15 @@ def evaluate_model(model, test_data, device):
         all_preds = pred.cpu().numpy()
         all_labels = test_data.y.cpu().numpy()
         cm = confusion_matrix(all_labels, all_preds)
+
+        # Compute detailed classification report
+        report = classification_report(all_labels, all_preds, output_dict=True)
     
     return {
         'test_loss': test_loss,
         'test_accuracy': test_accuracy,
         'confusion_matrix': cm,
+        'classification_report': report,
         'predictions': all_preds,
         'true_labels': all_labels
     }
@@ -268,9 +272,17 @@ def main():
             **test_results,
             'parameters_count': sum(p.numel() for p in model.parameters())
         }
-        
-        print(f'{model_name.upper()} Test Loss: {test_results["test_loss"]:.4f}, '
+
+        # Print test metrics and report
+        print(f'\n{model_name.upper()} Test Loss: {test_results["test_loss"]:.4f}, '
               f'Test Accuracy: {test_results["test_accuracy"]:.4f}')
+        print("\nClassification Report:")
+        for cls, metrics in test_results['classification_report'].items():
+            # Skip global entries like 'accuracy' which are floats
+            if not isinstance(metrics, dict):
+                continue
+            print(f"Class {cls}: Precision={metrics['precision']:.2f}, "
+                  f"Recall={metrics['recall']:.2f}, F1={metrics['f1-score']:.2f}")
     
     # Generate visualizations
     visualize_results(results)
