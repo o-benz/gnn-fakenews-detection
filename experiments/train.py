@@ -101,82 +101,49 @@ def train_model(model, train_data, val_data, optimizer, device, epochs=100, pati
     patience_counter = 0
     start_time = time.time()
 
-    # Create data loaders
-    train_loader = NeighborLoader(
-        train_data,
-        num_neighbors=[10] * 2,  # 2-hop neighborhood
-        batch_size=Config.batch_size,
-        shuffle=True
-    )
-    val_loader = NeighborLoader(
-        val_data,
-        num_neighbors=[10] * 2,
-        batch_size=Config.batch_size
-    )
+    # Move data to device
+    train_data = train_data.to(device)
+    val_data = val_data.to(device)
 
     for epoch in range(epochs):
         # Training
         model.train()
-        epoch_loss = 0
-        correct = 0
-        total = 0
+        optimizer.zero_grad()
         
-        for batch in train_loader:
-            batch = batch.to(device)
-            optimizer.zero_grad()
-            
-            # Handle different model types
-            if isinstance(model, DHGAT):
-                out = model(batch.content_x, batch.social_x, 
-                          batch.content_edge_index, batch.social_edge_index)
-            else:  # GCN or GAT
-                out = model(batch.x, batch.edge_index)
-            
-            # Only compute loss on central nodes
-            batch_size = batch.batch_size
-            loss = F.cross_entropy(out[:batch_size], batch.y[:batch_size])
-            loss.backward()
-            optimizer.step()
-            
-            epoch_loss += loss.item() * batch_size
-            pred = out[:batch_size].argmax(dim=1)
-            correct += pred.eq(batch.y[:batch_size]).sum().item()
-            total += batch_size
-
-        train_loss = epoch_loss / total
-        train_acc = correct / total
+        # Handle different model types
+        if isinstance(model, DHGAT):
+            out = model(train_data.content_x, train_data.social_x,
+                       train_data.content_edge_index, train_data.social_edge_index)
+        else:  # GCN or GAT
+            out = model(train_data.x, train_data.edge_index)
+        
+        loss = F.cross_entropy(out, train_data.y)
+        loss.backward()
+        optimizer.step()
+        
+        # Calculate training metrics
+        pred = out.argmax(dim=1)
+        train_acc = pred.eq(train_data.y).sum().item() / train_data.y.size(0)
+        train_loss = loss.item()
+        
         train_losses.append(train_loss)
         train_accuracies.append(train_acc)
 
         # Validation
         model.eval()
-        val_loss = 0
-        correct = 0
-        total = 0
-        
         with torch.no_grad():
-            for batch in val_loader:
-                batch = batch.to(device)
-                
-                # Handle different model types
-                if isinstance(model, DHGAT):
-                    out = model(batch.content_x, batch.social_x,
-                              batch.content_edge_index, batch.social_edge_index)
-                else:  # GCN or GAT
-                    out = model(batch.x, batch.edge_index)
-                
-                # Only compute metrics on central nodes
-                batch_size = batch.batch_size
-                loss = F.cross_entropy(out[:batch_size], batch.y[:batch_size])
-                val_loss += loss.item() * batch_size
-                pred = out[:batch_size].argmax(dim=1)
-                correct += pred.eq(batch.y[:batch_size]).sum().item()
-                total += batch_size
-
-        val_loss = val_loss / total
-        val_acc = correct / total
-        val_losses.append(val_loss)
-        val_accuracies.append(val_acc)
+            if isinstance(model, DHGAT):
+                out = model(val_data.content_x, val_data.social_x,
+                          val_data.content_edge_index, val_data.social_edge_index)
+            else:  # GCN or GAT
+                out = model(val_data.x, val_data.edge_index)
+            
+            val_loss = F.cross_entropy(out, val_data.y).item()
+            pred = out.argmax(dim=1)
+            val_acc = pred.eq(val_data.y).sum().item() / val_data.y.size(0)
+            
+            val_losses.append(val_loss)
+            val_accuracies.append(val_acc)
 
         print(f'Epoch {epoch:03d}: Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, '
               f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}')
@@ -203,44 +170,24 @@ def train_model(model, train_data, val_data, optimizer, device, epochs=100, pati
 
 def evaluate_model(model, test_data, device):
     model.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
-    all_preds = []
-    all_labels = []
-    
-    # Create test loader
-    test_loader = NeighborLoader(
-        test_data,
-        num_neighbors=[10] * 2,
-        batch_size=Config.batch_size
-    )
+    test_data = test_data.to(device)
     
     with torch.no_grad():
-        for batch in test_loader:
-            batch = batch.to(device)
-            
-            # Handle different model types
-            if isinstance(model, DHGAT):
-                out = model(batch.content_x, batch.social_x,
-                          batch.content_edge_index, batch.social_edge_index)
-            else:  # GCN or GAT
-                out = model(batch.x, batch.edge_index)
-            
-            # Only compute metrics on central nodes
-            batch_size = batch.batch_size
-            loss = F.cross_entropy(out[:batch_size], batch.y[:batch_size])
-            test_loss += loss.item() * batch_size
-            pred = out[:batch_size].argmax(dim=1)
-            correct += pred.eq(batch.y[:batch_size]).sum().item()
-            total += batch_size
-            
-            all_preds.extend(pred.cpu().numpy())
-            all_labels.extend(batch.y[:batch_size].cpu().numpy())
-
-    test_loss = test_loss / total
-    test_accuracy = correct / total
-    cm = confusion_matrix(all_labels, all_preds)
+        # Handle different model types
+        if isinstance(model, DHGAT):
+            out = model(test_data.content_x, test_data.social_x,
+                       test_data.content_edge_index, test_data.social_edge_index)
+        else:  # GCN or GAT
+            out = model(test_data.x, test_data.edge_index)
+        
+        test_loss = F.cross_entropy(out, test_data.y).item()
+        pred = out.argmax(dim=1)
+        test_accuracy = pred.eq(test_data.y).sum().item() / test_data.y.size(0)
+        
+        # Get predictions and labels for confusion matrix
+        all_preds = pred.cpu().numpy()
+        all_labels = test_data.y.cpu().numpy()
+        cm = confusion_matrix(all_labels, all_preds)
     
     return {
         'test_loss': test_loss,
