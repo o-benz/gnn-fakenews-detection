@@ -94,4 +94,9 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
-This project was developed as part of the INF8225 course on Probabilistic and Learning Techniques in Artificial Intelligence at Polytechnique Montréal.
+This project was developed as part of the INF8225 course on Probabilistic and Learning Techniques in Artificial Intelligence at Polytechnique Montréal, under the guidance of our professor Christopher J. Pal and with support from our TA Anthony Gosselin.
+
+### Team Members
+- Ely Cheikh Abass
+- Omar Benzekri
+- Anis Abdeladim
