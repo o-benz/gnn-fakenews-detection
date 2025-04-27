@@ -25,7 +25,7 @@ def load_and_prepare_LIAR():
     Returns:
         pd.DataFrame: The prepared dataset
     """
-    ds_dir = 'data/liar_dataset'
+    ds_dir = 'experiments/data/liar_dataset'
     ds_file = os.path.join('data', 'liar_df.csv')
 
     if os.path.isfile(ds_file):
