@@ -1,2 +1,10 @@
 \section{Conclusion}
 % Summary + future directions
+
+In this project, we explored the application of Graph Neural Networks (GNNs) to the task of fake news detection, focusing on adapting the Decision-based Heterogeneous Graph Attention Network (DHGAT) framework to a dual-channel setting. By separately modeling content and social relational information through dedicated graph structures and dynamically balancing their contributions via an attention mechanism, our model sought to capture the complex interplay between textual features and dissemination patterns inherent in misinformation.
+
+Our experiments on the LIAR dataset demonstrated that leveraging both content and social signals, even in a simplified homogeneous graph formulation, provides measurable benefits over traditional graph convolutional baselines. Although the improvements were modest, they validate the hypothesis that integrating relational context enhances fake news detection performance beyond what is achievable through content analysis alone. The project also emphasized the practical importance of graph construction strategies, feature quality, and the alignment between model complexity and dataset characteristics.
+
+Looking forward, several avenues for future work emerge. First, applying our approach to richer datasets that explicitly capture user-news interactions could allow for full heterogeneous graph modeling, further exploiting the relational diversity present in social media environments. Additionally, incorporating dynamic graph techniques to model the temporal evolution of news propagation could provide deeper insights into the early detection of fake news. Finally, extending the attention mechanism to operate not only across modalities but also across node types and relation types within heterogeneous graphs could enhance the flexibility and interpretability of the model.
+
+Overall, this project illustrates the significant potential of graph-based methods in misinformation detection and highlights both the challenges and opportunities that arise when bridging theoretical innovation with practical implementation in real-world settings.
